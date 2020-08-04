@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qf.dao.SpeakerMapper">
+    <resultMap id="speakerMap" type="com.qf.pojo.Speaker">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="speaker_name" property="speakerName"/>
+        <result column="speaker_desc" property="speakerDesc"/>
+        <result column="speaker_job" property="speakerJob"/>
+        <result column="head_img_url" property="headImgUrl"/>
+    </resultMap>
+    <select id="selectAll" resultType="HashMap">
+        SELECT
+        speaker.id,
+        speaker.speaker_name,
+        speaker.speaker_desc,
+        speaker.speaker_job,
+        speaker.head_img_url
+        FROM
+        speaker
+    </select>
+    <insert id="insertSpeaker" parameterType="com.qf.pojo.Speaker">
+    insert into speaker (id,speaker_name, speaker_desc, speaker_job) values (#{id}, #{speakerName}, #{speakerDesc},
+      #{speakerJob});
+</insert>
+
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        delete from speaker
+    where id = #{id,jdbcType=INTEGER}
+    </delete>
+
+
+    <update id="updateById" parameterType="com.qf.pojo.Speaker">
+    update speaker set speaker_name = #{speakerName,jdbcType=VARCHAR},
+                speaker_desc = #{speakerDesc,jdbcType=VARCHAR},
+                speaker_job = #{speakerJob,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=INTEGER}
+</update>
+
+</mapper>

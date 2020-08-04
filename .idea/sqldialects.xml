@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://F:/课件/2002/杨/video-parent/videos.sql" dialect="MySQL" />
+    <file url="file://F:/课件/2002/杨/车速递租车项目/carsys.sql" dialect="MySQL" />
+  </component>
+</project>

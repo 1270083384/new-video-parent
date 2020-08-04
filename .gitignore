@@ -1,0 +1,4 @@
+# Project exclude paths
+/new-video-dao/target/
+/new-video-service/target/
+/new-video-web/target/
