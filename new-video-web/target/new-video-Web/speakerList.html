@@ -1,0 +1,279 @@
+<table class="layui-hide" id="test" lay-filter="test"></table>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <!--        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">批量删除</button>-->
+        <!--        <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>-->
+        <!--        <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>-->
+        <button class="layui-btn layui-btn-sm" lay-event="addWord">添加</button>
+    </div>
+</script>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+</script>
+<script type="text/html" id="barDemo1">
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/html" id="titleTpl">
+    {{d.LAY_TABLE_INDEX+1}}
+</script>
+
+<script type="text/javascript">
+
+
+    layui.use('table', function () {
+        var table = layui.table;
+
+        table.render({
+            elem: '#test'
+            , url: 'speaker/findSpeakers'
+            , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+            , defaultToolbar: ['filter', 'exports', 'print', { //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+                title: '提示'
+                , layEvent: 'LAYTABLE_TIPS'
+                , icon: 'layui-icon-tips'
+            }]
+            , title: '用户数据表'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', title: '用户ID', width: 100, fixed: 'left', align: 'center', templet: '#titleTpl'}
+                , {field: 'speaker_name', title: '名称'}
+                , {field: 'speaker_job', title: '职位'}
+                , {field: 'speaker_desc', title: '简介'}
+
+                , {fixed: 'right', title: '编辑', toolbar: '#barDemo', width: 150}
+                , {fixed: 'right', title: '删除', toolbar: '#barDemo1', width: 150}
+            ]]
+            , page: true
+        });
+
+        //头工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    // layer.alert(JSON.stringify(data));
+                    var param = "";
+                    for (var i in data) {
+                        param += "&ids=" + data[i].id
+                    }
+                    $.ajax({
+                        url: "video/deleteByIds",
+                        type: "POST",
+                        data: param,
+                        success: function () {
+                            table.reload("test", {});
+                            layer.msg("删除成功")
+                        }
+
+                    });
+                    break;
+                case 'getCheckLength':
+                    var data = checkStatus.data;
+                    layer.msg('选中了：' + data.length + ' 个');
+                    break;
+                case 'isAll':
+                    layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                    break;
+                case 'addWord':
+                    addword();
+                    break;
+
+                //自定义头工具栏右侧图标 - 提示
+                case 'LAYTABLE_TIPS':
+                    layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                    break;
+            }
+            ;
+        });
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            json = JSON.stringify(data);
+            // switch(obj.event) {
+            // case 'del':
+            //     var delIndex = layer.confirm('真的删除吗?', function(delIndex) {
+            //         $.ajax({
+            //             url: '/word/deleteById/?id='+data.id,
+            //             type: "post",
+            //             success: function(suc) {
+            //                 if(suc.status != 200) {
+            //                     obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+            //                     layer.close(delIndex);
+            //                     console.log(delIndex);
+            //                     layer.msg("删除成功", {
+            //                         icon: 1
+            //                     });
+            //                 } else {
+            //                     layer.msg("删除失败", {
+            //                         icon: 5
+            //                     });
+            //                 }
+            //             }
+            //         });
+            //         layer.close(delIndex);
+            //     });
+            //     break;
+            //     case 'edit':
+            //         var index = layer.open({
+            //             type: 2,
+            //             title: "编辑投诉页面",
+            //             area: ['30%', '60%'],
+            //             fix: false,
+            //             maxmin: true,
+            //             shadeClose: true,
+            //             shade: 0.4,
+            //             skin: 'layui-layer-rim',
+            //             content: ["/updateById-word.html", "no"],
+            //         });
+            //         break;
+            //
+            // }
+            console.log(obj)
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    obj.del();
+                    $.ajax({
+                        type:'post',
+                        url: '/speaker/deleteById/?id=' + data.id,
+                        success: function () {
+                            layer.close(index);
+                            layer.msg("删除成功")
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                updateSpeaker(data);
+                // layer.prompt({
+                //     formType: 2
+                //     , value: data.email
+                // }, function (value, index) {
+                //     obj.update({
+                //         email: value
+                //     });
+                //     layer.close(index);
+                // });
+            }
+        });
+    });
+</script>
+
+<script type="text/html" id="addSpeaker">
+    <form class="layui-form layui-form-pane" id="speaker-edit-form" lay-filter="speaker-edit-form">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="speakerName" id="speakerName" lay-verify="title" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">职位</label>
+            <div class="layui-input-block">
+                <input type="text" name="speakerJob" id="speakerJob" lay-verify="title" autocomplete="off"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">简介</label>
+            <div class="layui-input-block">
+                <textarea name="speakerDesc" id="speakerDesc" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+</script>
+
+<script>
+
+     var words = null;
+
+     <!-- 页面加载时触发 -->
+     // $(function () {
+     //
+     //     $.ajax({
+     //         type: "POST",
+     //         url: "speaker/findAll",
+     //         success: function(backData){
+     //             JSON.stringify(backData);
+     //             words  = backData;
+     //         }
+     //     });
+     //
+     //
+     // })
+    function addword() {
+
+        layer.open({
+            type: 1,
+            content: $('#addSpeaker').html(),
+            title: '添加主讲人信息',
+            area: ['600px', '600px'],
+            btn: ['提交', '取消'], //可以写多个按钮
+
+            yes: function (index, layero) {
+
+                $.ajax({
+                    url: 'speaker/insertSpeaker',
+                    data: $("#speaker-edit-form").serialize(),
+                    method: 'post',
+                    success: function () {
+                        window.location.reload();//重新加载
+                    }
+                })
+            }
+        })
+    }
+</script>
+<script>
+    var words = null;
+
+    <!-- 页面加载时触发 -->
+    // $(function () {
+    //
+    //     $.ajax({
+    //         type: "POST",
+    //         url: "speaker/findAll",
+    //         success: function (backData) {
+    //             JSON.stringify(backData);
+    //             words = backData;
+    //         }
+    //     });
+    //
+    //
+    // })
+
+
+    function updateSpeaker(data) {
+        layer.open({
+            type: 1,
+            content: $('#addSpeaker').html(),
+            title: '更新主讲人信息',
+            area: ['600px', '600px'],
+            btn: ['提交', '取消'], //可以写多个按钮
+            success: function () {//弹出层打开后的回调函数,数据回显
+                $('#id').val(data.id);
+                $('#speakerName').val(data.speaker_name);
+                $('#speakerJob').val(data.speaker_job);
+                $('#speakerDesc').val(data.speaker_desc);
+
+
+                layui.form.render();//后追加到页面的元素，layui不渲染，必须render
+            },
+            yes: function (index, layero) {
+                $.ajax({
+                    url: 'speaker/updateById?id=' + data.id,
+                    data: $("#speaker-edit-form").serialize(),
+                    method: 'post',
+                        success: function () {
+
+                        window.location.reload();//重新加载
+                    }
+                })
+            }
+        })
+    }
+</script>
